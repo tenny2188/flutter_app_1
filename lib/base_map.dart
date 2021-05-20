@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:naver_map_plugin/naver_map_plugin.dart';
 
@@ -16,6 +16,39 @@ class _BaseMapPageState extends State<BaseMapPage> {
 
   @override
   void initState() {
+    FirebaseFirestore.instance.collection('point1').get().then((value) {
+      if(value.docs.isNotEmpty){
+          print('firebase 불러오기 성공!');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            OverlayImage.fromAssetImage(
+              assetName: 'icon/marker.png',
+              context: context,
+            ).then((image) {
+              setState(() {
+                for(int i =0; i<value.docs.length; i++){
+                    _markers.add(Marker(
+                    markerId: 'id',
+                    position: LatLng(
+                      value.docs[i].data()['location'].latitude, 
+                      value.docs[i].data()['location'].longitude),
+                    captionText: "커스텀 아이콘",
+                    captionColor: Colors.indigo,
+                    captionTextSize: 20.0,
+                    alpha: 0.8,
+                    icon: image,
+                    anchor: AnchorPoint(0.5, 1),
+                    width: 45,
+                    height: 45,
+                    infoWindow: '인포 윈도우',
+                    onMarkerTab: _onMarkerTap));
+                }
+              });
+            });
+          });
+        
+      }
+    });
+    /*
     WidgetsBinding.instance.addPostFrameCallback((_) {
       OverlayImage.fromAssetImage(
         assetName: 'icon/marker.png',
@@ -38,12 +71,32 @@ class _BaseMapPageState extends State<BaseMapPage> {
         });
       });
     });
+    */
     super.initState();
   }
 
   MapType _mapType = MapType.Basic;
   LocationTrackingMode _trackingMode = LocationTrackingMode.NoFollow;
-
+/*
+  Widget loadmarker(){
+    return StreamBuilder(
+      stream: FirebaseFirestore.instance.collection('Test').snapshots(),
+      builder: (context, snapshot) {
+        if(!snapshot.hasData) return Text('Loading maps.. Please Wait');
+        for(int i =0; i<snapshot.data.documents.length; i++){
+              _markers.add(Marker(
+              markerId: 'id',
+              position: LatLng(
+                snapshot.data.documents[i]['coords'].latitude,
+                snapshot.data.documents[i]['coords'].longitude),
+              captionText: "커스텀 아이콘",
+              infoWindow: '인포 윈도우',
+              onMarkerTab: _onMarkerTap));
+        }
+      },
+    );
+  }
+*/
   @override
   Widget build(BuildContext context) {
     return Scaffold(
